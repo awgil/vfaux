@@ -1,0 +1,8 @@
+{
+  "Author": "veyn",
+  "Name": "Easier Faux Hollows",
+  "Punchline": "Faux Hollows solver based on known patterns",
+  "Description": "Based on ezFauxHollows, but uses known patterns instead of general-purpose solver.",
+  "InternalName": "vfaux",
+  "ApplicableVersion": "any"
+}
