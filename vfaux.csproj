@@ -20,10 +20,6 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="robocopy $(TargetDir)$(ProjectName) ..\PluginDistribution\plugins\$(ProjectName) /mir"></Exec>
-  </Target>
-
   <PropertyGroup>
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
   </PropertyGroup>
@@ -63,4 +59,8 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="DefaultDalamudPackagerRelease" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="robocopy $(TargetDir)$(ProjectName) ..\PluginDistribution\plugins\$(ProjectName) /mir" IgnoreExitCode="true"></Exec>
+  </Target>
 </Project>
