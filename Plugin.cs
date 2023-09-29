@@ -102,7 +102,7 @@ public sealed class Plugin : IDalamudPlugin
         var tileState = ReadTileStateFromAddon(addon);
         _board.Update(tileState);
         var solution = _solver.Solve(_board);
-        var bestScore = solution.Where(s => s < 16).Max();
+        var bestScore = solution.Max();
         if (bestScore == 0)
             bestScore = -1;
         UpdateAddonColors(addon, solution, bestScore);

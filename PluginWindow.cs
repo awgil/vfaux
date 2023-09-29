@@ -96,13 +96,15 @@ internal class PluginWindow : Window, IDisposable
     {
         int tileIndex = 0;
         var solution = _solver.Solve(board);
+        var bestScore = solution.Max();
+        if (bestScore == 0)
+            bestScore = -1;
         for (int y = 0; y < BoardState.Height; ++y)
         {
             for (int x = 0; x < BoardState.Width; ++x)
             {
-                var t = board.Tiles[tileIndex];
-                var text = t == BoardState.Tile.Hidden ? solution[tileIndex].ToString() : t.ToString();
-                if (ImGui.Button($"{text}###{x}x{y}", new(100, 0)) && interactable)
+                var t = solution[tileIndex];
+                if (ImGui.Button($"{board.Tiles[tileIndex]} ({t}{(t == bestScore ? "*" : "")})###{x}x{y}", new(100, 0)) && interactable)
                 {
                     SimBoardOpen(x, y);
                 }
@@ -146,7 +148,14 @@ internal class PluginWindow : Window, IDisposable
                 foreach (var idx in cell.Foxes.SetBits())
                     addColor(idx, foxColor);
 
-                DrawBoard(cursor, colors, borderColor);
+                if (DrawBoard(cursor, colors, borderColor))
+                {
+                    _simSheet = sheet;
+                    _simRow = row;
+                    _simCell = cell;
+                    _simFox = _simCell.Foxes.SetBits().Skip(new Random().Next(_simCell.Foxes.NumSetBits())).FirstOrDefault(-1);
+                    SimBoardReset();
+                }
                 cursor.X += BoardSize;
             }
             cursor.Y += BoardSize;
@@ -157,7 +166,8 @@ internal class PluginWindow : Window, IDisposable
         ImGui.GetWindowDrawList().PopClipRect();
     }
 
-    private void DrawBoard(Vector2 cursor, uint[] colors, uint borderColor)
+    // returns whether board was double-clicked
+    private bool DrawBoard(Vector2 cursor, uint[] colors, uint borderColor)
     {
         var dl = ImGui.GetWindowDrawList();
         for (int y = 0; y < BoardState.Height; ++y)
@@ -173,7 +183,10 @@ internal class PluginWindow : Window, IDisposable
             dl.AddRect(cursor + new Vector2(CellSize * x, 0), cursor + new Vector2(CellSize * x, CellSize * BoardState.Width), borderColor, 0, ImDrawFlags.None, 1);
             dl.AddRect(cursor + new Vector2(0, CellSize * x), cursor + new Vector2(CellSize * BoardState.Width, CellSize * x), borderColor, 0, ImDrawFlags.None, 1);
         }
-        dl.AddRect(cursor, cursor + new Vector2(CellSize * BoardState.Width), borderColor, 0, ImDrawFlags.None, 2); // border
+        var br = cursor + new Vector2(CellSize * BoardState.Width);
+        dl.AddRect(cursor, br, borderColor, 0, ImDrawFlags.None, 2); // border
+
+        return ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && ImGui.IsMouseHoveringRect(cursor, br);
     }
 
     private uint Color(int r, int g, int b, float a = 1.0f) => ((uint)(a * 255) << 24) | ((uint)(b * a) << 16) | ((uint)(g * a) << 8) | ((uint)(r * a));

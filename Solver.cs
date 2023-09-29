@@ -6,8 +6,8 @@ namespace vfaux;
 public class Solver
 {
     // special scores
-    public const int ConfirmedSword = 50;
-    public const int ConfirmedBoxChest = 60;
+    public const int ConfirmedSword = -2;
+    public const int ConfirmedBoxChest = -3;
 
     public Patterns PatternDB = new();
     public bool FindSwordsFirst = false;
