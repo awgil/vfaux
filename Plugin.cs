@@ -1,15 +1,11 @@
-﻿using Dalamud.Game.ClientState;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
+﻿using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
-using System;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Dalamud.Logging;
 using System.Linq;
-using Dalamud.Game.ClientState.Fates;
-using System.Reflection.Metadata.Ecma335;
+using Dalamud.Plugin.Services;
 
 namespace vfaux;
 
@@ -46,12 +42,14 @@ internal enum WeeklyPuzzlePrizeTexture
 
 public sealed class Plugin : IDalamudPlugin
 {
+    public static IPluginLog? Log;
+
     public string Name => "Easier Faux Hollows";
 
     public DalamudPluginInterface Dalamud { get; init; }
-    public CommandManager CommandManager { get; init; }
-    public ClientState ClientState { get; init; }
-    public GameGui GameGui { get; init; }
+    public ICommandManager CommandManager { get; init; }
+    public IClientState ClientState { get; init; }
+    public IGameGui GameGui { get; init; }
 
     private BoardState _board = new();
     private Solver _solver = new();
@@ -59,8 +57,10 @@ public sealed class Plugin : IDalamudPlugin
     public WindowSystem WindowSystem = new("vfaux");
     private PluginWindow _wnd;
 
-    public Plugin(DalamudPluginInterface dalamud, CommandManager commmandManager, ClientState clientState, GameGui gameGui)
+    public Plugin(DalamudPluginInterface dalamud, ICommandManager commmandManager, IClientState clientState, IGameGui gameGui, IPluginLog log)
     {
+        Log = log;
+
         Dalamud = dalamud;
         CommandManager = commmandManager;
         ClientState = clientState;
@@ -148,7 +148,7 @@ public sealed class Plugin : IDalamudPlugin
                 };
 
                 if (tileState == BoardState.Tile.Unknown)
-                    PluginLog.Error($"Unexpected tile state at {x}x{y}: bg={tileBackgroundImage->PartId}, icon={tileIconImage->PartId}");
+                    Log?.Error($"Unexpected tile state at {x}x{y}: bg={tileBackgroundImage->PartId}, icon={tileIconImage->PartId}");
 
                 var rotation = tileIconImage->AtkResNode.Rotation;
                 if (rotation < 0)

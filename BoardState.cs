@@ -56,7 +56,7 @@ public class BoardState
         }
         else
         {
-            PluginLog.Error($"Inconsistent tile pattern: {string.Join(',', tiles)}");
+            Plugin.Log?.Error($"Inconsistent tile pattern: {string.Join(',', tiles)}");
             Array.Fill(Tiles, Tile.Unknown);
             Blockers.Reset();
             SwordsTL = -1;
