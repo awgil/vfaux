@@ -29,21 +29,20 @@ public class Solver
                 potentialFoxes.Add(c.Foxes.Raw);
             }
 
-            var swordsScore = potentialSwords.Count == 1 ? ConfirmedSword : 1;
-            var boxScore = potentialBoxes.Count == 1 ? ConfirmedBoxChest : (FindSwordsFirst && potentialSwords.Count > 1) ? 0 : 1;
+            var swordsScore = potentialSwords.Count == 1 ? ConfirmedSword : 10;
+            var boxScore = potentialBoxes.Count == 1 ? ConfirmedBoxChest : (FindSwordsFirst && potentialSwords.Count > 1) ? 0 : 10;
             foreach (var (tl, h) in potentialSwords)
                 foreach (var i in SwordIndices(tl, h))
                     result[i] += swordsScore;
             foreach (var tl in potentialBoxes)
                 foreach (var i in BoxChestIndices(tl))
                     result[i] += boxScore;
-
-            if (potentialFoxes.Count == 1)
-            {
-                var foxes = new BitMask(potentialFoxes.First());
-                foreach (var f in foxes.SetBits())
-                    result[f] = PotentialFox;
-            }
+            foreach (var foxes in potentialFoxes)
+                foreach (var f in new BitMask(foxes).SetBits())
+                    if (potentialFoxes.Count == 1)
+                        result[f] = PotentialFox;
+                    else
+                        result[f] += 1;
         }
         return result;
     }
