@@ -8,6 +8,7 @@ public class Solver
     // special scores
     public const int ConfirmedSword = -2;
     public const int ConfirmedBoxChest = -3;
+    public const int PotentialFox = -4;
 
     public Patterns PatternDB = new();
     public bool FindSwordsFirst = false;
@@ -36,11 +37,12 @@ public class Solver
             foreach (var tl in potentialBoxes)
                 foreach (var i in BoxChestIndices(tl))
                     result[i] += boxScore;
+
             if (potentialFoxes.Count == 1)
             {
                 var foxes = new BitMask(potentialFoxes.First());
                 foreach (var f in foxes.SetBits())
-                    result[f] += 1;
+                    result[f] = PotentialFox;
             }
         }
         return result;

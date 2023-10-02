@@ -174,6 +174,7 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     Solver.ConfirmedSword => (31, 174, 186),
                     Solver.ConfirmedBoxChest => (180, 173, 44),
+                    Solver.PotentialFox => (193, 98, 186),
                     _ => soln == bestScore ? (32, 143, 46) : (0, 0, 0)
                 };
                 tileBackgroundImage->AtkResNode.AddRed = (ushort)r;
