@@ -177,9 +177,9 @@ public sealed class Plugin : IDalamudPlugin
                     Solver.PotentialFox => (193, 98, 186),
                     _ => soln == bestScore ? (32, 143, 46) : (0, 0, 0)
                 };
-                tileBackgroundImage->AtkResNode.AddRed = (ushort)r;
-                tileBackgroundImage->AtkResNode.AddGreen = (ushort)g;
-                tileBackgroundImage->AtkResNode.AddBlue = (ushort)b;
+                tileBackgroundImage->AtkResNode.AddRed = (short)r;
+                tileBackgroundImage->AtkResNode.AddGreen = (short)g;
+                tileBackgroundImage->AtkResNode.AddBlue = (short)b;
             }
         }
     }
