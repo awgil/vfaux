@@ -4,5 +4,6 @@
   "Punchline": "Faux Hollows solver based on known patterns",
   "Description": "Based on ezFauxHollows, but uses known patterns instead of general-purpose solver.",
   "InternalName": "vfaux",
-  "ApplicableVersion": "any"
+  "ApplicableVersion": "any",
+  "IconUrl": "https://raw.githubusercontent.com/awgil/vfaux/cc5a9c0564e07cc822b6f7617bd8983c82b8207f/icon.png"
 }
