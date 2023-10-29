@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors></Authors>
     <Company></Company>
-    <Version>0.0.0.4</Version>
+    <Version>0.0.0.0</Version>
     <Description>Faux hollows solver</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/awgil/ffxiv_vfaux</PackageProjectUrl>
@@ -59,8 +59,4 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="DefaultDalamudPackagerRelease" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="robocopy $(TargetDir)$(ProjectName) ..\PluginDistribution\plugins\$(ProjectName) /mir" IgnoreExitCode="true"></Exec>
-  </Target>
 </Project>
