@@ -5,7 +5,6 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Linq;
 using Dalamud.Plugin.Services;
-using ImGuiNET;
 
 namespace vfaux;
 
@@ -40,38 +39,11 @@ internal enum WeeklyPuzzlePrizeTexture
     Commander = 18,
 }
 
-class RepoMigrateWindow : Window
-{
-    public static string OldURL = "https://raw.githubusercontent.com/awgil/ffxiv_plugin_distribution/master/pluginmaster.json";
-    public static string NewURL = "https://puni.sh/api/repository/veyn";
-
-    public RepoMigrateWindow() : base("Warning! Plugin home repository was changed")
-    {
-        IsOpen = true;
-    }
-
-    public override void Draw()
-    {
-        ImGui.TextUnformatted("The home repository of Easier Faux Hollows (vfaux) plugin was recently changed.");
-        ImGui.TextUnformatted("Please update your dalamud settings to point to the new repository:");
-        if (ImGui.Button("Click here to copy new url into clipboard"))
-            ImGui.SetClipboardText(NewURL);
-        ImGui.TextUnformatted("1. Go to repo settings (esc -> dalamud settings -> experimental).");
-        ImGui.TextUnformatted($"2. Replace '{OldURL}' with '{NewURL}' (use button above and just ctrl-V -> enter).");
-        ImGui.TextUnformatted("3. Press save-and-close button.");
-        ImGui.TextUnformatted("4. Go to dalamud plugins (esc -> dalamud plugins -> installed plugins).");
-        ImGui.TextUnformatted("5. Uninstall and reinstall this plugin (you might need to restart the game before dalamud allows you to reinstall).");
-        ImGui.TextUnformatted("Don't worry, you won't lose any settings. Sorry for bother and enjoy the plugin!");
-    }
-}
-
 public sealed class Plugin : IDalamudPlugin
 {
     public static IPluginLog? Log;
 
-    public string Name => "Easier Faux Hollows";
-
-    public DalamudPluginInterface Dalamud { get; init; }
+    public IDalamudPluginInterface Dalamud { get; init; }
     public ICommandManager CommandManager { get; init; }
     public IClientState ClientState { get; init; }
     public IGameGui GameGui { get; init; }
@@ -82,7 +54,7 @@ public sealed class Plugin : IDalamudPlugin
     public WindowSystem WindowSystem = new("vfaux");
     private PluginWindow _wnd;
 
-    public Plugin(DalamudPluginInterface dalamud, ICommandManager commmandManager, IClientState clientState, IGameGui gameGui, IPluginLog log)
+    public Plugin(IDalamudPluginInterface dalamud, ICommandManager commmandManager, IClientState clientState, IGameGui gameGui, IPluginLog log)
     {
         Log = log;
 
@@ -97,9 +69,6 @@ public sealed class Plugin : IDalamudPlugin
 
         Dalamud.UiBuilder.Draw += Draw;
         Dalamud.UiBuilder.OpenConfigUi += () => _wnd.IsOpen = true;
-
-        if (dalamud.SourceRepository == RepoMigrateWindow.OldURL)
-            WindowSystem.AddWindow(new RepoMigrateWindow());
     }
 
     public void Dispose()
@@ -124,7 +93,7 @@ public sealed class Plugin : IDalamudPlugin
         if (addon == null)
             return;
 
-        if (!addon->AtkUnitBase.IsVisible || addon->AtkUnitBase.UldManager.LoadedState != AtkLoadState.Loaded)
+        if (!addon->IsVisible || addon->UldManager.LoadedState != AtkLoadState.Loaded)
             return;
 
         var tileState = ReadTileStateFromAddon(addon);
@@ -153,7 +122,7 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     WeeklyPuzzleTexture.Hidden => BoardState.Tile.Hidden,
                     WeeklyPuzzleTexture.Blocked => BoardState.Tile.Blocked,
-                    WeeklyPuzzleTexture.Blank => !tileIconImage->AtkResNode.IsVisible ? BoardState.Tile.Empty : (WeeklyPuzzlePrizeTexture)tileIconImage->PartId switch
+                    WeeklyPuzzleTexture.Blank => !tileIconImage->IsVisible() ? BoardState.Tile.Empty : (WeeklyPuzzlePrizeTexture)tileIconImage->PartId switch
                     {
                         WeeklyPuzzlePrizeTexture.BoxTL => BoardState.Tile.BoxTL,
                         WeeklyPuzzlePrizeTexture.BoxTR => BoardState.Tile.BoxTR,
