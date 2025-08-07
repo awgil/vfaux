@@ -89,7 +89,7 @@ public sealed class Plugin : IDalamudPlugin
         if (ClientState.TerritoryType != 478) // Idyllshire
             return;
 
-        var addon = (AddonWeeklyPuzzle*)GameGui.GetAddonByName("WeeklyPuzzle", 1);
+        var addon = (AddonWeeklyPuzzle*)GameGui.GetAddonByName("WeeklyPuzzle", 1).Address;
         if (addon == null)
             return;
 
