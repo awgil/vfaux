@@ -43,10 +43,11 @@ public sealed class Plugin : IDalamudPlugin
 {
     public static IPluginLog? Log;
 
-    public IDalamudPluginInterface Dalamud { get; init; }
+    public IDalamudPluginInterface DalamudPluginInterface { get; init; }
     public ICommandManager CommandManager { get; init; }
     public IClientState ClientState { get; init; }
     public IGameGui GameGui { get; init; }
+    public INotificationManager NotificationManager { get; init; }
 
     private BoardState _board = new();
     private Solver _solver = new();
@@ -54,28 +55,52 @@ public sealed class Plugin : IDalamudPlugin
     public WindowSystem WindowSystem = new("vfaux");
     private PluginWindow _wnd;
 
-    public Plugin(IDalamudPluginInterface dalamud, ICommandManager commmandManager, IClientState clientState, IGameGui gameGui, IPluginLog log)
+    public Plugin(IDalamudPluginInterface dalamud, ICommandManager commmandManager, IClientState clientState, IGameGui gameGui, IPluginLog log, INotificationManager notificationManager)
     {
         Log = log;
 
-        Dalamud = dalamud;
+        DalamudPluginInterface = dalamud;
         CommandManager = commmandManager;
         ClientState = clientState;
         GameGui = gameGui;
+        NotificationManager = notificationManager;
 
         _wnd = new(_board, _solver);
         WindowSystem.AddWindow(_wnd);
         CommandManager.AddHandler("/vfaux", new CommandInfo((_, _) => _wnd.IsOpen = true) { HelpMessage = "Show plugin window" });
 
-        Dalamud.UiBuilder.Draw += Draw;
-        Dalamud.UiBuilder.OpenConfigUi += () => _wnd.IsOpen = true;
+        DalamudPluginInterface.UiBuilder.Draw += Draw;
+        DalamudPluginInterface.UiBuilder.OpenConfigUi += () => _wnd.IsOpen = true;
+        DalamudPluginInterface.ActivePluginsChanged += OnActivePluginsChanged;
+
+        if (DalamudPluginInterface.InstalledPlugins.Any((plugin) => plugin.InternalName == "FauxHollowsSolver" && plugin.IsLoaded))
+            ShowEzFauxHollowsError();
     }
 
     public void Dispose()
     {
+        DalamudPluginInterface.ActivePluginsChanged -= OnActivePluginsChanged;
         CommandManager.RemoveHandler("/vfaux");
         WindowSystem.RemoveAllWindows();
         _wnd.Dispose();
+    }
+
+    private void OnActivePluginsChanged(IActivePluginsChangedEventArgs args)
+    {
+        if (args.AffectedInternalNames.Contains("FauxHollowsSolver") && args.Kind == PluginListInvalidationKind.Loaded)
+        {
+            ShowEzFauxHollowsError();
+        }
+    }
+
+    private void ShowEzFauxHollowsError()
+    {
+        NotificationManager.AddNotification(new()
+        {
+            Title = "Easier Faux Hollows",
+            Content = "Easier Faux Hollows is not compatible with ezFauxHollows",
+            Type = Dalamud.Interface.ImGuiNotification.NotificationType.Error
+        });
     }
 
     private void Draw()
@@ -174,14 +199,14 @@ public sealed class Plugin : IDalamudPlugin
                     Solver.PotentialFox => (193, 98, 186),
                     _ => soln == bestScore ? (32, 143, 46) : (0, 0, 0)
                 };
-                tileBackgroundImage->AtkResNode.AddRed = (short)r;
-                tileBackgroundImage->AtkResNode.AddGreen = (short)g;
-                tileBackgroundImage->AtkResNode.AddBlue = (short)b;
+                tileBackgroundImage->AddRed = (short)r;
+                tileBackgroundImage->AddGreen = (short)g;
+                tileBackgroundImage->AddBlue = (short)b;
             }
         }
     }
 
     private unsafe AtkComponentButton* GetTileButton(AddonWeeklyPuzzle* addon, int x, int y) => addon->GameBoard[y][x].Button;
-    private unsafe AtkImageNode* GetBackgroundImageNode(AtkComponentButton* button) => (AtkImageNode*)button->AtkComponentBase.UldManager.NodeList[3];
-    private unsafe AtkImageNode* GetIconImageNode(AtkComponentButton* button) => (AtkImageNode*)button->AtkComponentBase.UldManager.NodeList[6];
+    private unsafe AtkImageNode* GetBackgroundImageNode(AtkComponentButton* button) => (AtkImageNode*)button->UldManager.NodeList[3];
+    private unsafe AtkImageNode* GetIconImageNode(AtkComponentButton* button) => (AtkImageNode*)button->UldManager.NodeList[6];
 }
