@@ -1,10 +1,13 @@
-﻿using Dalamud.Game.Command;
+﻿using System;
+using System.Linq;
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using System.Linq;
-using Dalamud.Plugin.Services;
 
 namespace vfaux;
 
@@ -45,8 +48,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public IDalamudPluginInterface DalamudPluginInterface { get; init; }
     public ICommandManager CommandManager { get; init; }
-    public IClientState ClientState { get; init; }
-    public IGameGui GameGui { get; init; }
+    public IAddonLifecycle AddonLifecycle { get; init; }
     public INotificationManager NotificationManager { get; init; }
 
     private BoardState _board = new();
@@ -55,21 +57,21 @@ public sealed class Plugin : IDalamudPlugin
     public WindowSystem WindowSystem = new("vfaux");
     private PluginWindow _wnd;
 
-    public Plugin(IDalamudPluginInterface dalamud, ICommandManager commmandManager, IClientState clientState, IGameGui gameGui, IPluginLog log, INotificationManager notificationManager)
+    public Plugin(IDalamudPluginInterface dalamud, ICommandManager commmandManager, IPluginLog log, INotificationManager notificationManager, IAddonLifecycle addonLifecycle)
     {
         Log = log;
 
         DalamudPluginInterface = dalamud;
         CommandManager = commmandManager;
-        ClientState = clientState;
-        GameGui = gameGui;
         NotificationManager = notificationManager;
+        AddonLifecycle = addonLifecycle;
 
         _wnd = new(_board, _solver);
         WindowSystem.AddWindow(_wnd);
         CommandManager.AddHandler("/vfaux", new CommandInfo((_, _) => _wnd.IsOpen = true) { HelpMessage = "Show plugin window" });
 
-        DalamudPluginInterface.UiBuilder.Draw += Draw;
+        AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "WeeklyPuzzle", SyncWithGameState);
+        DalamudPluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         DalamudPluginInterface.UiBuilder.OpenConfigUi += () => _wnd.IsOpen = true;
         DalamudPluginInterface.ActivePluginsChanged += OnActivePluginsChanged;
 
@@ -80,17 +82,15 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         DalamudPluginInterface.ActivePluginsChanged -= OnActivePluginsChanged;
+        AddonLifecycle.UnregisterListener(SyncWithGameState);
         CommandManager.RemoveHandler("/vfaux");
         WindowSystem.RemoveAllWindows();
-        _wnd.Dispose();
     }
 
     private void OnActivePluginsChanged(IActivePluginsChangedEventArgs args)
     {
         if (args.AffectedInternalNames.Contains("FauxHollowsSolver") && args.Kind == PluginListInvalidationKind.Loaded)
-        {
             ShowEzFauxHollowsError();
-        }
     }
 
     private void ShowEzFauxHollowsError()
@@ -103,24 +103,11 @@ public sealed class Plugin : IDalamudPlugin
         });
     }
 
-    private void Draw()
+    private unsafe void SyncWithGameState(AddonEvent type, AddonArgs args)
     {
-        SyncWithGameState();
-        WindowSystem.Draw();
-    }
+        if (!args.Addon.IsVisible || !args.Addon.IsReady) return;
 
-    private unsafe void SyncWithGameState()
-    {
-        if (ClientState.TerritoryType != 478) // Idyllshire
-            return;
-
-        var addon = (AddonWeeklyPuzzle*)GameGui.GetAddonByName("WeeklyPuzzle", 1).Address;
-        if (addon == null)
-            return;
-
-        if (!addon->IsVisible || addon->UldManager.LoadedState != AtkLoadState.Loaded)
-            return;
-
+        var addon = (AddonWeeklyPuzzle*)args.Addon.Address;
         var tileState = ReadTileStateFromAddon(addon);
         _board.Update(tileState);
         var solution = _solver.Solve(_board);

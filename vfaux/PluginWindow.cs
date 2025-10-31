@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace vfaux;
 
-internal class PluginWindow : Window, IDisposable
+internal class PluginWindow : Window
 {
     private BoardState _gameBoard;
     private BoardState _simBoard = new();
@@ -25,11 +25,6 @@ internal class PluginWindow : Window, IDisposable
         SizeCondition = ImGuiCond.Once;
         _gameBoard = gameBoard;
         _solver = solver;
-    }
-
-    public void Dispose()
-    {
-
     }
 
     public override void Draw()
